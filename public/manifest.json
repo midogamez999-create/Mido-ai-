@@ -1,0 +1,23 @@
+{
+  "name": "Mido AI Studio",
+  "short_name": "Mido AI",
+  "description": "Mido AI - Smarter. Faster. Better. Complete AI Creative Studio featuring Mido Video AI, Mido Orb, YouTube Studio, Music Synthesis, and AI Chat.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "categories": ["multimedia", "productivity", "utilities", "entertainment"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512 any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}

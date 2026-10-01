@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="100%" height="100%">
+  <defs>
+    <!-- Metallic Silver Gradient for "M" and "I" -->
+    <linearGradient id="silverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="40%" stop-color="#f1f5f9" />
+      <stop offset="70%" stop-color="#cbd5e1" />
+      <stop offset="100%" stop-color="#94a3b8" />
+    </linearGradient>
+
+    <!-- Vibrant Athletic Red Gradient for "DO" -->
+    <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff2a2a" />
+      <stop offset="50%" stop-color="#ee0000" />
+      <stop offset="100%" stop-color="#b30000" />
+    </linearGradient>
+
+    <!-- 3D Bevel Highlight Gradient -->
+    <linearGradient id="bevelLight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6" />
+      <stop offset="30%" stop-color="#ffffff" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.4" />
+    </linearGradient>
+
+    <!-- Red Glow Filter -->
+    <filter id="redGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Deep True Black Canvas -->
+  <rect width="1024" height="1024" rx="220" fill="#000000" />
+  <rect width="1024" height="1024" rx="220" fill="none" stroke="#222222" stroke-width="4" />
+
+  <!-- Background subtle radial flare behind text -->
+  <radialGradient id="centerGlow" cx="55%" cy="48%" r="45%">
+    <stop offset="0%" stop-color="#dc2626" stop-opacity="0.18" />
+    <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+  </radialGradient>
+  <rect width="1024" height="1024" rx="220" fill="url(#centerGlow)" />
+
+  <g transform="translate(60, 160)">
+    <!-- ==================== "M" (Metallic Silver Sharp Athletic) ==================== -->
+    <path d="M 0,440 L 80,180 L 170,180 L 225,320 L 275,180 L 375,180 L 310,440 L 235,440 L 270,300 L 210,440 L 155,440 L 115,300 L 80,440 Z" fill="url(#silverGrad)" />
+    <!-- M Top dynamic cut notch -->
+    <polygon points="0,440 30,320 80,180 15,220" fill="#ffffff" opacity="0.3" />
+
+    <!-- ==================== "I" (Diagonal Cut Athletic Red Accent) ==================== -->
+    <path d="M 330,440 L 395,180 L 465,180 L 400,440 Z" fill="url(#silverGrad)" />
+    <!-- Red Top Slash on I -->
+    <polygon points="410,180 475,180 450,240 385,240" fill="url(#redGrad)" />
+
+    <!-- ==================== "D" (Dynamic Bold Red Curved Athletic) ==================== -->
+    <g filter="drop-shadow(0px 8px 16px rgba(220, 38, 38, 0.4))">
+      <path d="M 455,440 L 520,180 L 630,180 C 700,180 735,225 715,310 C 695,395 640,440 560,440 Z M 530,380 L 565,240 L 615,240 C 655,240 665,270 655,315 C 645,355 625,380 585,380 Z" fill="url(#redGrad)" />
+      <!-- D Notch / speed slash cut -->
+      <polygon points="590,240 645,240 635,270 580,270" fill="#ff6b6b" opacity="0.4" />
+    </g>
+
+    <!-- ==================== "O" (Dynamic Bold Red Curved Athletic with Speed Slash) ==================== -->
+    <g filter="drop-shadow(0px 8px 16px rgba(220, 38, 38, 0.4))">
+      <path d="M 725,440 C 685,440 660,400 675,315 C 695,225 735,180 815,180 C 895,180 920,225 905,315 C 885,405 845,440 765,440 Z M 750,380 C 785,380 805,355 815,315 C 825,270 815,240 780,240 C 745,240 725,270 715,315 C 705,355 715,380 750,380 Z" fill="url(#redGrad)" />
+      <!-- Speed slash blade out of O top right -->
+      <polygon points="870,280 945,215 885,255" fill="url(#redGrad)" />
+      <polygon points="880,310 930,275 890,300" fill="url(#redGrad)" />
+    </g>
+
+    <!-- ==================== MIDDLE SECTION: RED LINES & "AI" ==================== -->
+    <!-- Left Red Line -->
+    <line x1="10" y1="520" x2="310" y2="520" stroke="#ee0000" stroke-width="8" stroke-linecap="round" />
+    
+    <!-- "AI" Centerpiece -->
+    <g transform="translate(340, 460)">
+      <!-- Letter A -->
+      <path d="M 0,110 L 45,0 L 95,0 L 140,110 L 95,110 L 85,85 L 55,85 L 45,110 Z M 60,65 L 80,65 L 70,30 Z" fill="#ffffff" />
+      
+      <!-- Letter I (Red Slanted Bar) -->
+      <path d="M 165,110 L 195,0 L 235,0 L 205,110 Z" fill="url(#redGrad)" />
+    </g>
+
+    <!-- Right Red Line -->
+    <line x1="600" y1="520" x2="900" y2="520" stroke="#ee0000" stroke-width="8" stroke-linecap="round" />
+
+    <!-- ==================== SUBTITLE: "SMARTER. FASTER. BETTER." ==================== -->
+    <text x="455" y="640" text-anchor="middle" fill="#ffffff" font-family="'Impact', 'Arial Black', sans-serif" font-weight="900" font-size="38" letter-spacing="10">
+      SMARTER. <tspan fill="#ee0000">FASTER.</tspan> BETTER.
+    </text>
+  </g>
+</svg>

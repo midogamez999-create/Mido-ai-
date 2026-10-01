@@ -1,0 +1,6 @@
+{
+  "name": "Mido AI",
+  "description": "Next-generation AI creative workspace featuring 2-Way Voice Responding Studio, Mido Shortcuts (instant 1-click access to 9 Mido & Lyria AI engines), Face Detect & local OSINT reverse image search, Mido Cut video & photo editor, Mido Orb video sharing, and multi-modal synthesis.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

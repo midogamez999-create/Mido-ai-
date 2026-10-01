@@ -1,0 +1,140 @@
+{
+  "entities": {
+    "users": {
+      "title": "Users",
+      "description": "User profile data stored in Firestore",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "providerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "lastLoginAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid"]
+    },
+    "orbVideos": {
+      "title": "Orb Videos",
+      "description": "User uploaded videos in Mido Orb platform",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "videoUrl": { "type": "string" },
+        "thumbnailUrl": { "type": "string" },
+        "duration": { "type": "string" },
+        "views": { "type": "number" },
+        "likes": { "type": "number" },
+        "dislikes": { "type": "number" },
+        "category": { "type": "string" },
+        "tags": { "type": "array" },
+        "visibility": { "type": "string" },
+        "audience": { "type": "string" },
+        "isShort": { "type": "boolean" },
+        "channelId": { "type": "string" },
+        "channelName": { "type": "string" },
+        "channelAvatar": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["title", "videoUrl"]
+    },
+    "orbChannels": {
+      "title": "Orb Channels",
+      "description": "User creator channels in Mido Orb",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "handle": { "type": "string" },
+        "description": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "bannerUrl": { "type": "string" },
+        "subscriberCount": { "type": "number" },
+        "videoCount": { "type": "number" },
+        "joinedDate": { "type": "string" }
+      },
+      "required": ["name"]
+    },
+    "orbComments": {
+      "title": "Orb Comments",
+      "description": "Comments on Mido Orb videos",
+      "type": "object",
+      "properties": {
+        "videoId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userAvatar": { "type": "string" },
+        "text": { "type": "string" },
+        "likes": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["videoId", "text"]
+    },
+    "userProfiles": {
+      "title": "User Profiles",
+      "description": "Universal user profile across Mido Orb, Nemis, and Ear",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "handle": { "type": "string" },
+        "avatar": { "type": "string" },
+        "banner": { "type": "string" },
+        "bio": { "type": "string" },
+        "followersCount": { "type": "number" },
+        "followingCount": { "type": "number" },
+        "followers": { "type": "array" },
+        "following": { "type": "array" },
+        "isVerified": { "type": "boolean" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "name"]
+    },
+    "nemisGames": {
+      "title": "Nemis Games",
+      "description": "Playable interactive games on Mido Nemis platform",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "genre": { "type": "string" },
+        "code": { "type": "string" },
+        "thumbnailUrl": { "type": "string" },
+        "creatorId": { "type": "string" },
+        "creatorName": { "type": "string" },
+        "creatorAvatar": { "type": "string" },
+        "creatorVerified": { "type": "boolean" },
+        "plays": { "type": "number" },
+        "likes": { "type": "number" },
+        "highScore": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["title", "code", "creatorId"]
+    },
+    "earTracks": {
+      "title": "Ear Music Tracks",
+      "description": "Songs and music tracks on Mido Ear platform",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "artist": { "type": "string" },
+        "creatorId": { "type": "string" },
+        "creatorAvatar": { "type": "string" },
+        "creatorVerified": { "type": "boolean" },
+        "genre": { "type": "string" },
+        "audioUrl": { "type": "string" },
+        "coverUrl": { "type": "string" },
+        "duration": { "type": "string" },
+        "isPrivate": { "type": "boolean" },
+        "plays": { "type": "number" },
+        "likes": { "type": "number" },
+        "lyrics": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["title", "audioUrl", "creatorId"]
+    }
+  }
+}
+

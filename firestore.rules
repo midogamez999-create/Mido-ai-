@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+    match /orbVideos/{videoId} {
+      allow read, write: if true;
+    }
+    match /orbComments/{commentId} {
+      allow read, write: if true;
+    }
+    match /orbChannels/{channelId} {
+      allow read, write: if true;
+    }
+    match /orbPlaylists/{playlistId} {
+      allow read, write: if true;
+    }
+    match /orbSubscriptions/{subId} {
+      allow read, write: if true;
+    }
+    match /orbLikes/{likeId} {
+      allow read, write: if true;
+    }
+    match /orbHistory/{historyId} {
+      allow read, write: if true;
+    }
+    match /orbNotifications/{notifId} {
+      allow read, write: if true;
+    }
+    match /userProfiles/{profileId} {
+      allow read, write: if true;
+    }
+    match /nemisGames/{gameId} {
+      allow read, write: if true;
+    }
+    match /earTracks/{trackId} {
+      allow read, write: if true;
+    }
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+
