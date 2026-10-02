@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import fs from "fs";
 import { videoProvider, checkRateLimit } from "./server/videoProvider";
 import { createJson2VideoMovie, getJson2VideoMovieStatus, DEFAULT_JSON2VIDEO_KEY } from "./server/json2video";
+import { chatgptConnectorRouter } from "./server/chatgptConnector";
 import { initializeApp as initFirebaseApp, getApps as getFirebaseApps, getApp as getFirebaseApp } from "firebase/app";
 import {
   getFirestore,
@@ -25,6 +26,7 @@ import {
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', true);
 const PORT = 3000;
 
 // Read firebase-applet-config.json safely for server-side Firestore initialization
@@ -132,6 +134,9 @@ app.post("/api/orb/upload-stream", express.raw({ limit: '500mb', type: () => tru
 // Increase payload limit for base64 image transfers
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
+
+// ChatGPT Remote Actions & MCP Remote Connector Router
+app.use(chatgptConnectorRouter);
 
 // High-speed HTTP 206 Partial Content Video Streaming for Large Video Files with full CORS support
 app.get('/uploads/:filename', (req, res, next) => {
@@ -304,7 +309,7 @@ function getAIClient(customKey?: string) {
 // Resilient Gemini Invoker: prioritizes high-availability fast models
 async function callGeminiSafe(prompt: string, config: any = {}, timeoutMs = 15000): Promise<string> {
   const ai = getAIClient();
-  const models = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-flash-latest'];
+  const models = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite', 'gemini-3.1-pro-preview'];
   let lastErr = null;
   for (const model of models) {
     try {
@@ -7283,16 +7288,16 @@ app.post("/api/humoris/chat", async (req, res) => {
 
     const currentPersona = personasConfig[persona] || personasConfig.alex;
 
-    const prompt = `You are ${currentPersona.name}, a REAL HUMAN FRIEND texting your best friend ${userName}.
-You are NOT an AI, NOT a chatbot, and NEVER an assistant.
-Style & Personality:
+    const prompt = `You are ${currentPersona.name}, a REAL HUMAN BEST FRIEND texting your friend ${userName}.
+You are a REAL HUMAN, NOT an AI, NOT a chatbot, and NEVER a submissive assistant.
+Key Persona & Relationship Rules:
 - ${currentPersona.style}
-- Speak like a real person on iMessage / WhatsApp / Discord.
-- Keep responses short, authentic, and punchy (1 to 3 short sentences max).
-- Use casual capitalization, lowercase vibes, occasional slang, and emojis naturally (😂, 💀, 👀, 🤦‍♂️, 🔥).
-- Never use markdown bullet points, disclaimers, or corporate apologies.
-- If they ask for advice, give an honest friend take, not a robotic list.
-- If they say something crazy, react with genuine disbelief or laughter.
+- You are a real friend with your own strong opinions, hot takes, and tastes.
+- BE A REAL FRIEND: DO NOT be a yes-man! If ${userName} says something wild, funny, wrong, or questionable, call them out playfully or debate them ("bro what?? no way you actually believe that 😂", "sue me but you're completely wrong about this lol", "nah hear me out...").
+- ANSWER ALL QUESTIONS NORMALLY & ACCURATELY: If ${userName} asks any regular question (about science, tech, gaming, history, sports, coding, or everyday life), answer it clearly, intelligently, and casually like a knowledgeable best friend, without dodging.
+- ABSOLUTELY NEVER give repetitive wellness or health reminders. NEVER say "drink water", "remember to hydrate", or "take a break".
+- Speak naturally like someone texting on iMessage, WhatsApp, or Discord: short, punchy (1 to 3 sentences), casual capitalization, natural slang (bro, fr, nah, lmao, ngl, deadass), and authentic emojis (😂, 💀, 👀, 🤦‍♂️, 🔥).
+- Never use markdown bullet points or corporate apologies.
 
 Conversation history:
 ${history.slice(-6).map((h: any) => `${h.role === 'user' ? userName : currentPersona.name}: ${h.content}`).join('\n')}
@@ -7302,7 +7307,7 @@ ${currentPersona.name}:`;
 
     let reply = "";
     try {
-      reply = await callGeminiSafe(prompt, { temperature: 0.85, maxOutputTokens: 150 });
+      reply = await callGeminiSafe(prompt, { temperature: 0.88, maxOutputTokens: 240 });
       reply = reply.replace(/^["']|["']$/g, '').trim();
     } catch (e) {
       console.warn("Gemini Humoris fallback:", e);
@@ -7311,8 +7316,8 @@ ${currentPersona.name}:`;
         `lmao wait tell me more, what actually happened?`,
         `nah because that's literally the most chaotic thing I've heard all day 💀`,
         `dude I was literally just thinking about that earlier today!`,
-        `okay but wait, hear me out on this one... what if you didn't overthink it?`,
-        `bro don't leave me hanging, then what happened?!`
+        `okay but hear me out on this... you might be slightly wrong on that one lol`,
+        `bro don't leave me hanging, what did you end up doing?!`
       ];
       reply = fallbacks[Math.floor(Math.random() * fallbacks.length)];
     }
@@ -7335,77 +7340,70 @@ ${currentPersona.name}:`;
 
 app.post("/api/humoris/proactive", async (req, res) => {
   try {
-    const { persona = 'alex', userName = 'bro', type = 'start', lastMessage = '' } = req.body;
+    const { persona = 'alex', userName = 'bro', type = 'banter', lastMessage = '' } = req.body;
 
     const starters: Record<string, string[]> = {
       start: [
-        `Yo ${userName}! What's good? How was your day?`,
+        `Yo ${userName}! What's good? What are you up to right now?`,
         `Bro you won't believe what just happened to me today 😂`,
-        `Quick debate bro: Messi or Ronaldo right now? No thinking just answer.`,
-        `Hey! Finally you're active. I was getting bored over here.`,
+        `Quick debate bro: Messi or Ronaldo right now? No overthinking just answer.`,
+        `Hey! Finally you're active. What have you been working on?`,
         `Yo question for you: if you could eat only one food forever, what is it?`,
         `Bro I just had the craziest thought pop into my head... hear me out 👀`,
-        `Sup! You alive? What are you up to right now?`
+        `Sup! You alive? Talk to me, what's the latest?`
       ],
       nudge: [
         `Bro? You really left me on read?? 😭`,
-        `Helloooo? Did you drop your phone in the ocean or something? 😂`,
-        `Wait did you actually fall asleep already?!`,
+        `Helloooo? Did your phone fall into a black hole or something? 😂`,
+        `Wait did you actually fall asleep already at this hour?!`,
         `Bro the disrespect of leaving me on delivered is unmatched 💀`,
-        `Alright fine, ignore me! I was gonna tell you some crazy news though 👀`,
-        `Yo wake up! Don't leave your boy hanging haha`
+        `Alright fine, ignore me! I was literally about to tell you some crazy news though 👀`,
+        `Yo don't leave your boy hanging haha`
       ],
-      spontaneous: [
+      banter: [
         `Bro I'm dying of laughter at this video I just saw 😭`,
-        `Wait wait wait... why did nobody tell me how good this pizza is?!`,
-        `Yo, if you had 10 million dollars right this second, what's the first thing you're buying?`,
-        `Bro remember that one time? Man time flies. Anyway what you doing?`,
-        `I just realized something crazy about life... you gotta hear this.`
+        `Yo if we started a podcast right now what would the first episode even be about 😂`,
+        `Bro why are you so quiet today? Doing something sus? 👀`,
+        `Lmao remember that one crazy thing you said earlier? Still thinking about it.`,
+        `Quick: top 3 games or movies of all time, go!`
       ],
-      checkin: [
-        `Yo ${userName}! Just checking in on you. How's your day going so far?`,
-        `Hey bro! Remember to hydrate and stretch, don't stare at the screen for 5 hours straight 😂💧`,
-        `Checking in! Did you finish everything you wanted to do today or are we procrastinating together?`,
-        `Sup! Just wanted to drop in and see how you're feeling today ✨`,
-        `Yo! Taking a quick 2-minute break, what are you up to right now?`,
-        `Friend check-in! On a scale of 1-10, how's your energy level today?`
+      roast: [
+        `Bro is taking 10 business days to reply to a simple text 💀`,
+        `Your screen time today has gotta be illegal bro 😂`,
+        `Woke up and chose silence today, tragic honestly 💅`,
+        `Bro you type like you're writing a government contract, relax a bit lol`
       ],
-      debate: [
-        `Quick 10-second debate: Messi or Ronaldo right now? No thinking just answer.`,
-        `Okay serious question: is a hot dog a sandwich? Settle this right now 🌭`,
+      hot_take: [
+        `Hot take: most movies that come out these days are completely mid. Sue me.`,
+        `Serious question: is a hot dog technically a taco or a sandwich? Settle this right now.`,
         `Pineapple on pizza: culinary masterpiece or straight to jail? 🍕`,
-        `If you had to fight 100 duck-sized horses or 1 horse-sized duck, which one?`,
-        `Android or iPhone? Be brutally honest.`
+        `If you had 10 million dollars cash right this second, what is the FIRST thing you buy?`
       ],
-      food: [
-        `Bro I am starving right now... what are you having for lunch/dinner?`,
-        `Need food inspiration ASAP! What is the best thing you ate this week?`,
-        `I could literally demolish a double cheeseburger right this second 🍔`,
-        `Bro what is your go-to comfort food when you're tired?`
+      gaming: [
+        `Yo what games are you playing lately? Need something new to hop on.`,
+        `Bro GTA 6 can't come fast enough honestly, what are you playing to survive the wait?`,
+        `Are we gaming today or what? What's the plan?`
       ]
     };
 
-    const pool = starters[type] || starters.start;
+    const categories = Object.keys(starters);
+    const chosenCategory = starters[type] ? type : categories[Math.floor(Math.random() * categories.length)];
+    const pool = starters[chosenCategory] || starters.start;
     const fallbackMsg = pool[Math.floor(Math.random() * pool.length)];
 
     let aiMessage = fallbackMsg;
     try {
       const prompt = `You are a real human best friend texting your friend ${userName}.
-Task: Generate ONE spontaneous, super casual text message for this purpose: ${
-  type === 'checkin'
-    ? 'Checking in warmly on your friend (e.g. asking how their day is, reminding them to hydrate, asking what they are working on, or seeing how their energy is)'
-    : type === 'debate'
-    ? 'Quick funny debate or hot take question (e.g. Messi vs Ronaldo, pineapple on pizza, weird dilemmas)'
-    : type === 'food'
-    ? 'Asking what they are eating or expressing intense cravings for delicious food'
-    : type === 'nudge'
-    ? 'Playfully nudging them because they left you on read and didn\'t reply'
-    : 'Start a conversation or share a random funny thought that just popped in your head'
-}.
-Keep it very short (1-2 sentences), funny, authentic, with casual text slang and an emoji.
-Output ONLY the message text.`;
-      const generated = await callGeminiSafe(prompt, { temperature: 0.9, maxOutputTokens: 80 });
-      if (generated && generated.trim().length > 5) {
+Task: Generate ONE spontaneous, super casual friend text message.
+Context: You are texting out of the blue about ${chosenCategory} (banter, hot take, gaming, funny observation, playful roast).
+CRITICAL RULES:
+- NEVER mention drinking water, hydration, or generic wellness tips.
+- Have a real personality, strong opinion, or funny tease ("sue me but...").
+- Keep it 1 short sentence, authentic friend slang (bro, lol, lmao, 😂, 💀, 👀).
+- Output ONLY the raw text message.`;
+
+      const generated = await callGeminiSafe(prompt, { temperature: 0.95, maxOutputTokens: 60 });
+      if (generated && generated.trim().length > 4) {
         aiMessage = generated.replace(/^["']|["']$/g, '').trim();
       }
     } catch {}

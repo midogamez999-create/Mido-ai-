@@ -882,12 +882,20 @@ export default function App() {
           const pluginInvocation = checkExplicitPluginInvocation(trimmedPrompt, activePlugins);
           if (pluginInvocation) {
             const pluginResult = await executeChatGPTPlugin(pluginInvocation.plugin, pluginInvocation.cleanQuery);
+            let sources = undefined;
+            if (pluginInvocation.plugin.id === 'web-browser' && pluginResult.cardData?.citations) {
+              sources = pluginResult.cardData.citations.map((c: any) => ({
+                title: c.title,
+                uri: c.url
+              }));
+            }
             const assistantMsg: ChatMessage = {
               id: (Date.now() + 1).toString(),
               role: 'assistant',
               content: pluginResult.summary,
               timestamp: new Date().toLocaleTimeString(),
               pluginResult,
+              groundingSources: sources,
             };
             setMessages((prev) => [...prev, assistantMsg]);
             soundFx.playReceived();
@@ -1404,12 +1412,25 @@ client.login(BOT_TOKEN);`;
             throw new Error(data.error);
           }
 
+          let effectiveSources = data.groundingSources && data.groundingSources.length > 0 ? data.groundingSources : [];
+          if (effectiveSources.length === 0) {
+            const siteMatch = prompt.match(/\b(?:search\s+(?:for\s+)?(?:site\s+|website\s+)?|lookup\s+|browse\s+|find\s+)([a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/i);
+            if (siteMatch) {
+              const rawDomain = siteMatch[1];
+              const fullUri = rawDomain.startsWith('http') ? rawDomain : `https://${rawDomain}`;
+              effectiveSources = [{
+                title: `${rawDomain.charAt(0).toUpperCase() + rawDomain.slice(1)} - Official Site`,
+                uri: fullUri
+              }];
+            }
+          }
+
           const assistantMsg: ChatMessage = {
             id: (Date.now() + 1).toString(),
             role: 'assistant',
             content: data.reply || "I've processed your request.",
             timestamp: new Date().toLocaleTimeString(),
-            groundingSources: data.groundingSources,
+            groundingSources: effectiveSources.length > 0 ? effectiveSources : undefined,
             generatedCode: data.generatedCode,
             actionPrompt: data.actionPrompt,
           };

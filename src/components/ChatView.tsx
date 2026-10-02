@@ -7,6 +7,7 @@ import { ChatIdeasModal } from './ChatIdeasModal';
 import { ChatSandboxRunner } from './ChatSandboxRunner';
 import { PluginActionCard } from './PluginActionCard';
 import { MidoAILoading } from './MidoAILoading';
+import { ChatGptSearchResultCard } from './ChatGptSearchResultCard';
 import { soundFx } from '../lib/soundFx';
 import { speechManager } from '../lib/speechManager';
 import {
@@ -188,6 +189,11 @@ function extractHtmlSnippet(content: string): string | null {
     return match[1].trim();
   }
   return null;
+}
+
+function formatMarkdownAutoLinks(content: string): string {
+  if (!content) return '';
+  return content.replace(/(^|[^(\]"])(https?:\/\/[^\s<)]+)/g, '$1[$2]($2)');
 }
 
 export const ChatView: React.FC<ChatViewProps> = ({
@@ -988,9 +994,32 @@ export const ChatView: React.FC<ChatViewProps> = ({
                       </div>
                     )}
 
+                    {/* ChatGPT Search Result Card with Favicon and Open Site */}
+                    {!isUser && msg.groundingSources && msg.groundingSources.length > 0 && (
+                      <ChatGptSearchResultCard sources={msg.groundingSources} />
+                    )}
+
                     {/* Message Text Rendered with Markdown */}
                     <div className={`prose prose-invert max-w-none break-words ${fontSizeClass} ${!isUser ? textColorClass : 'text-white'} leading-relaxed`}>
-                      <Markdown>{msg.content}</Markdown>
+                      <Markdown
+                        components={{
+                          a: ({ href, children }) => (
+                            <a
+                              href={href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => soundFx.playClick()}
+                              className="inline-flex items-center gap-1 font-semibold text-indigo-400 hover:text-indigo-300 border-b border-indigo-400/50 hover:border-indigo-300 transition-colors pb-0.5 group not-italic cursor-pointer"
+                              title={`Open link: ${href}`}
+                            >
+                              <span>{children}</span>
+                              <ExternalLink className="w-3 h-3 text-indigo-400/70 group-hover:text-indigo-300 inline shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                            </a>
+                          ),
+                        }}
+                      >
+                        {formatMarkdownAutoLinks(msg.content)}
+                      </Markdown>
                     </div>
 
                     {/* Play Store Plugin Action Result Widget */}

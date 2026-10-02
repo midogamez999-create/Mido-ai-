@@ -131,6 +131,11 @@ export interface ChatMessage {
   };
   pluginResult?: any;
   thinkingProcess?: ThinkingProcessData;
+  callSession?: {
+    callerName: string;
+    status: 'ringing' | 'connected' | 'ended';
+    spokenAnswer?: string;
+  };
   isError?: boolean;
   isLoading?: boolean;
 }

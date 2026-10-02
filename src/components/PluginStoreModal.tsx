@@ -7,6 +7,8 @@ import {
   installPlugin,
   uninstallPlugin,
   searchPlugins,
+  authorizePluginAccount,
+  deauthorizePluginAccount,
   PRESET_CHATGPT_PLUGINS
 } from '../lib/pluginsSystem';
 import {
@@ -67,6 +69,19 @@ export const PluginStoreModal: React.FC<PluginStoreModalProps> = ({
     soundFx.playClick();
     const updated = uninstallPlugin(pluginId);
     setPlugins([...updated]);
+  };
+
+  const handleToggleAuth = (pluginId: string) => {
+    soundFx.playClick();
+    const target = plugins.find(p => p.id === pluginId);
+    if (target?.isAuthorized) {
+      const updated = deauthorizePluginAccount(pluginId);
+      setPlugins([...updated]);
+    } else {
+      const updated = authorizePluginAccount(pluginId, 'mido.gamez999@gmail.com');
+      setPlugins([...updated]);
+      soundFx.playSuccess();
+    }
   };
 
   const handleReset = () => {
@@ -185,7 +200,7 @@ export const PluginStoreModal: React.FC<PluginStoreModalProps> = ({
                 return (
                   <div
                     key={plugin.id}
-                    className={`p-4 rounded-2xl border transition-all flex flex-col justify-between ${
+                    className={`relative overflow-hidden p-4 rounded-2xl border transition-all flex flex-col justify-between group ${
                       isEnabled
                         ? 'bg-slate-900 border-emerald-500/40 ring-1 ring-emerald-500/30 shadow-lg shadow-emerald-950/20'
                         : isInstalled
@@ -193,12 +208,31 @@ export const PluginStoreModal: React.FC<PluginStoreModalProps> = ({
                         : 'bg-white/5 border-white/5 hover:border-white/15'
                     }`}
                   >
-                    <div>
+                    {/* App Icon Watermark & Brand Aura Behind It */}
+                    <div className="absolute -right-4 -bottom-4 text-7xl opacity-10 pointer-events-none select-none filter blur-[0.5px] transform rotate-12 transition-transform group-hover:scale-125 duration-300">
+                      {plugin.icon}
+                    </div>
+                    {plugin.brandLogoUrl && (
+                      <div
+                        className="absolute -right-2 -bottom-2 w-28 h-28 rounded-full opacity-10 pointer-events-none select-none bg-cover bg-center filter blur-[1px]"
+                        style={{ backgroundImage: `url(${plugin.brandLogoUrl})` }}
+                      />
+                    )}
+                    <div
+                      className="absolute -top-10 -left-10 w-32 h-32 rounded-full pointer-events-none blur-3xl opacity-15"
+                      style={{ backgroundColor: plugin.brandColor || '#10b981' }}
+                    />
+
+                    <div className="relative z-10">
                       {/* Plugin Header: Icon, Name, Developer, Status */}
                       <div className="flex items-start justify-between gap-3 mb-2">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-2xl shadow-inner shrink-0">
-                            {plugin.icon}
+                          <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-2xl shadow-inner shrink-0 relative overflow-hidden">
+                            {plugin.brandLogoUrl ? (
+                              <img src={plugin.brandLogoUrl} alt={plugin.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <span>{plugin.icon}</span>
+                            )}
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
@@ -254,11 +288,35 @@ export const PluginStoreModal: React.FC<PluginStoreModalProps> = ({
                       <p className="text-xs text-slate-300 leading-relaxed mb-3">
                         {plugin.description}
                       </p>
+
+                      {/* Account Authorization status & action */}
+                      <div className="flex items-center justify-between py-1.5 px-2 rounded-xl bg-black/40 border border-white/5 text-[11px] mb-2">
+                        <div className="flex items-center gap-1.5 text-slate-300 min-w-0">
+                          <ShieldCheck className={`w-3.5 h-3.5 shrink-0 ${plugin.isAuthorized ? 'text-emerald-400' : 'text-amber-400'}`} />
+                          <span className="truncate max-w-[150px] sm:max-w-[200px] text-[10px]">
+                            {plugin.isAuthorized
+                              ? `Linked: ${plugin.authorizedAccount || 'mido.gamez999@gmail.com'}`
+                              : 'Requires Account Auth'}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleToggleAuth(plugin.id)}
+                          className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all border shrink-0 ${
+                            plugin.isAuthorized
+                              ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300 hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/30'
+                              : 'bg-amber-500/20 border-amber-500/40 text-amber-300 hover:bg-amber-500/30'
+                          }`}
+                        >
+                          {plugin.isAuthorized ? 'Authorized ✓' : 'Authorize 🔐'}
+                        </button>
+                      </div>
                     </div>
 
                     {/* Sample Queries Chips */}
                     {plugin.sampleQueries && plugin.sampleQueries.length > 0 && (
-                      <div className="pt-2.5 border-t border-white/5 space-y-1">
+                      <div className="relative z-10 pt-2 border-t border-white/5 space-y-1">
                         <span className="text-[10px] uppercase font-bold text-slate-500 block">
                           Try asking:
                         </span>

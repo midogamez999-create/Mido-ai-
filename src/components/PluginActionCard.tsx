@@ -112,8 +112,12 @@ export const PluginActionCard: React.FC<PluginActionCardProps> = ({ result }) =>
       {/* 2. RICH INTERACTIVE RESULT WIDGET */}
       {/* A. MUSIC / SPOTIFY CARD */}
       {cardType === 'music' && cardData && (
-        <div className="rounded-2xl bg-gradient-to-br from-emerald-950/50 via-slate-900 to-slate-950 border border-emerald-500/30 p-4 shadow-xl">
-          <div className="flex items-start gap-3.5">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-950/50 via-slate-900 to-slate-950 border border-emerald-500/30 p-4 shadow-xl group">
+          {/* App Icon Watermark Behind It */}
+          <div className="absolute -right-4 -bottom-4 text-8xl opacity-10 pointer-events-none select-none filter blur-[0.5px] transform rotate-12 transition-transform group-hover:scale-110">
+            {icon}
+          </div>
+          <div className="relative z-10 flex items-start gap-3.5">
             <img
               src={cardData.coverUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&q=80'}
               alt={cardData.title}
@@ -392,6 +396,17 @@ export const PluginActionCard: React.FC<PluginActionCardProps> = ({ result }) =>
           </div>
         </div>
       )}
+
+      {/* 3. PLUGIN AUTHORIZATION & VERIFIED APP FOOTER */}
+      <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-slate-900/60 border border-white/5 text-[11px] text-slate-400">
+        <div className="flex items-center gap-1.5 text-emerald-400">
+          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+          <span>Account Authorized: <strong className="text-slate-200">{result.authorizedAccount || 'mido.gamez999@gmail.com'}</strong></span>
+        </div>
+        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-slate-400 border border-white/10">
+          Verified App
+        </span>
+      </div>
     </div>
   );
 };

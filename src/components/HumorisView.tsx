@@ -111,7 +111,7 @@ const PERSONAS: Record<string, HumorisPersona> = {
     ],
     topics: [
       'Who is the greatest superhero of all time?',
-      'Is water actually wet or does it make things wet?',
+      'Is cereal technically a cold soup or a breakfast stew?',
       'If aliens landed right now, who do we send to greet them?'
     ],
     roasts: [
@@ -369,10 +369,12 @@ export const HumorisView: React.FC<HumorisViewProps> = ({
     return () => clearInterval(callTimerRef.current);
   }, [isInCall]);
 
-  const triggerFriendCheckIn = async (type = 'checkin') => {
+  const triggerFriendCheckIn = async (type?: string) => {
     if (isTyping) return;
+    const categories = ['banter', 'hot_take', 'gaming', 'roast', 'start'];
+    const chosenType = type || categories[Math.floor(Math.random() * categories.length)];
     setIsTyping(true);
-    setTypingStatus(`${persona.name} is checking on you... 👀`);
+    setTypingStatus(`${persona.name} is texting you... 💬`);
 
     try {
       const res = await fetch('/api/humoris/proactive', {
@@ -381,7 +383,7 @@ export const HumorisView: React.FC<HumorisViewProps> = ({
         body: JSON.stringify({
           persona: persona.id,
           userName: user?.nickname || user?.name || 'bro',
-          type
+          type: chosenType
         })
       });
       const data = await res.json();
@@ -920,6 +922,18 @@ export const HumorisView: React.FC<HumorisViewProps> = ({
       {/* 4. QUICK CONVERSATION CHIPS */}
       <div className="relative z-10 px-4 py-2 bg-slate-950/80 backdrop-blur-md flex items-center gap-2 overflow-x-auto no-scrollbar border-t border-white/5">
         <button
+          onClick={() => handleSendMessage(undefined, "Sue me but I have a controversial opinion: pineapple belongs on pizza and gaming is way better than movies. What's your honest take? 😂")}
+          className="px-3 py-1 rounded-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-[11px] font-bold text-amber-300 shrink-0 transition-all hover:text-white"
+        >
+          Sue Me / Debate Me ⚖️
+        </button>
+        <button
+          onClick={() => handleSendMessage(undefined, "Real question for you bro: explain how human eyes see different colors and why the sky is blue like an intelligent friend.")}
+          className="px-3 py-1 rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-[11px] font-bold text-cyan-300 shrink-0 transition-all hover:text-white"
+        >
+          Answer Real Question 🧠
+        </button>
+        <button
           onClick={() => handleSendMessage(undefined, 'Messi or Ronaldo? Give me your honest unfiltered take.')}
           className="px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-slate-300 shrink-0 transition-all hover:text-white"
         >
@@ -927,7 +941,7 @@ export const HumorisView: React.FC<HumorisViewProps> = ({
         </button>
         <button
           onClick={handleRoastMe}
-          className="px-3 py-1 rounded-full bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-[11px] text-red-300 shrink-0 transition-all"
+          className="px-3 py-1 rounded-full bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-[11px] font-bold text-red-300 shrink-0 transition-all"
         >
           Roast Me 🔥
         </button>
@@ -942,12 +956,6 @@ export const HumorisView: React.FC<HumorisViewProps> = ({
           className="px-3 py-1 rounded-full bg-pink-500/15 hover:bg-pink-500/25 border border-pink-500/30 text-[11px] text-pink-300 shrink-0 transition-all"
         >
           Drop A Meme 🖼️
-        </button>
-        <button
-          onClick={() => handleSendMessage(undefined, 'What are you eating today? I need food inspiration right now')}
-          className="px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-slate-300 shrink-0 transition-all hover:text-white"
-        >
-          Food Cravings 🍕
         </button>
       </div>
 

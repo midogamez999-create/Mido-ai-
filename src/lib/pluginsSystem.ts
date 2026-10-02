@@ -13,7 +13,7 @@ export interface ChatGPTPlugin {
   icon: string;
   category: 'popular' | 'media' | 'productivity' | 'math' | 'shopping' | 'travel' | 'developer' | 'tools';
   description: string;
-  enabled: boolean; // Enabled for active chat session (up to 3 like ChatGPT)
+  enabled: boolean; // Enabled for active chat session
   installed: boolean; // Installed in user's plugin library
   version: string;
   verified: boolean;
@@ -23,6 +23,11 @@ export interface ChatGPTPlugin {
     description_for_model: string;
     api_endpoint?: string;
   };
+  authRequired?: boolean;
+  isAuthorized?: boolean;
+  authorizedAccount?: string;
+  brandColor?: string;
+  brandLogoUrl?: string;
 }
 
 export interface PluginActionResult {
@@ -36,6 +41,10 @@ export interface PluginActionResult {
   summary: string;
   cardType: 'music' | 'math' | 'search' | 'product' | 'location' | 'delivery' | 'ride' | 'code' | 'voice' | 'general';
   cardData: any;
+  brandColor?: string;
+  brandLogoUrl?: string;
+  isAuthorized?: boolean;
+  authorizedAccount?: string;
 }
 
 export const PRESET_CHATGPT_PLUGINS: ChatGPTPlugin[] = [
@@ -50,6 +59,11 @@ export const PRESET_CHATGPT_PLUGINS: ChatGPTPlugin[] = [
     installed: true,
     version: '4.2.0',
     verified: true,
+    authRequired: false,
+    isAuthorized: true,
+    authorizedAccount: 'mido.gamez999@gmail.com',
+    brandColor: '#A855F7',
+    brandLogoUrl: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=128&q=80',
     sampleQueries: ['Talk to me in audio', 'Use talking tool to speak this', 'Read out in neural voice', 'Say hello in voice'],
     manifest: {
       description_for_human: 'Transform text to lifelike human speech and interactive audio waveform note.',
@@ -67,6 +81,11 @@ export const PRESET_CHATGPT_PLUGINS: ChatGPTPlugin[] = [
     installed: true,
     version: '2.4.0',
     verified: true,
+    authRequired: true,
+    isAuthorized: true,
+    authorizedAccount: 'mido.gamez999@gmail.com',
+    brandColor: '#1DB954',
+    brandLogoUrl: 'https://images.unsplash.com/photo-1614680376593-902f749f7ffc?w=128&q=80',
     sampleQueries: ['Search song Bohemian Rhapsody on Spotify', 'Play The Weeknd Blinding Lights', 'Find top chill beats on Spotify'],
     manifest: {
       description_for_human: 'Search and stream music, albums, and lyrics directly in chat.',
@@ -84,6 +103,11 @@ export const PRESET_CHATGPT_PLUGINS: ChatGPTPlugin[] = [
     installed: true,
     version: '3.1.2',
     verified: true,
+    authRequired: false,
+    isAuthorized: true,
+    authorizedAccount: 'mido.gamez999@gmail.com',
+    brandColor: '#DD1100',
+    brandLogoUrl: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=128&q=80',
     sampleQueries: ['Solve equation 3x^2 - 12x + 9 = 0', 'Calculate distance from Earth to Mars', 'Derivative of sin(x)*e^x'],
     manifest: {
       description_for_human: 'Solve advanced math, scientific formulas, physics, and chemistry questions.',
@@ -403,16 +427,50 @@ export function searchPlugins(query: string, category: string = 'all'): ChatGPTP
   });
 }
 
+export function authorizePluginAccount(pluginId: string, email: string = 'mido.gamez999@gmail.com'): ChatGPTPlugin[] {
+  const all = getInstalledPlugins();
+  const updated = all.map(p => {
+    if (p.id === pluginId) {
+      return { ...p, isAuthorized: true, authorizedAccount: email, installed: true, enabled: true };
+    }
+    return p;
+  });
+  savePlugins(updated);
+  return updated;
+}
+
+export function deauthorizePluginAccount(pluginId: string): ChatGPTPlugin[] {
+  const all = getInstalledPlugins();
+  const updated = all.map(p => {
+    if (p.id === pluginId) {
+      return { ...p, isAuthorized: false, authorizedAccount: undefined };
+    }
+    return p;
+  });
+  savePlugins(updated);
+  return updated;
+}
+
 /**
- * Check if a user prompt is explicitly targeting an active plugin.
- * Normal conversation ("I like Spotify", "Do you listen to music?", "What is Amazon?")
- * will return NULL so that AI responds naturally!
+ * Check if a user prompt is targeting an active or installed plugin.
+ * Enables smart tool calling when the user asks for music, math, web search,
+ * speech synthesis, python execution, travel, weather, or product deals.
  */
-export function checkExplicitPluginInvocation(prompt: string, activePlugins: ChatGPTPlugin[]): { plugin: ChatGPTPlugin; cleanQuery: string } | null {
+export function checkExplicitPluginInvocation(
+  prompt: string,
+  activePlugins: ChatGPTPlugin[],
+  allPlugins: ChatGPTPlugin[] = getInstalledPlugins()
+): { plugin: ChatGPTPlugin; cleanQuery: string } | null {
   const trimmed = prompt.trim();
   const lower = trimmed.toLowerCase();
 
-  for (const plugin of activePlugins) {
+  // Combine active plugins with full library to ensure user intents are fulfilled
+  const candidatePlugins = [
+    ...activePlugins,
+    ...allPlugins.filter(p => !activePlugins.some(a => a.id === p.id))
+  ];
+
+  for (const plugin of candidatePlugins) {
     // 1. Direct @Plugin mention (e.g. "@Spotify play Blinding Lights", "@Wolfram solve 2x+5=15")
     const atPrefix = `@${plugin.name.toLowerCase()}`;
     const atIdPrefix = `@${plugin.id.toLowerCase()}`;
@@ -439,33 +497,89 @@ export function checkExplicitPluginInvocation(prompt: string, activePlugins: Cha
       return { plugin, cleanQuery: clean || trimmed };
     }
 
-    // 4. Natural Intent Matching when plugin is enabled
+    // 4. Natural Intent Matching: Talking Tool
     if (plugin.id === 'talking-tool' && (
       lower.includes('talking tool') ||
       lower.startsWith('talk to me') ||
       lower.startsWith('speak this') ||
       lower.startsWith('talk:') ||
       lower.startsWith('say in voice') ||
-      lower.startsWith('read aloud')
+      lower.startsWith('read aloud') ||
+      lower.includes('say aloud')
     )) {
-      const clean = trimmed.replace(/^(talking tool|use talking tool to|talk to me about|talk to me|speak this|talk:|say in voice|read aloud)\s*/i, '').trim();
+      const clean = trimmed.replace(/^(talking tool|use talking tool to|talk to me about|talk to me|speak this|talk:|say in voice|read aloud|say aloud)\s*/i, '').trim();
       return { plugin, cleanQuery: clean || 'Hello there! I am your real-time Mido Talking Tool.' };
     }
 
+    // 5. Natural Intent Matching: Spotify
     if (plugin.id === 'spotify' && (
       lower.includes('on spotify') ||
       lower.startsWith('spotify play') ||
-      lower.startsWith('spotify search')
+      lower.startsWith('spotify search') ||
+      lower.startsWith('play song ') ||
+      lower.startsWith('play track ') ||
+      lower.startsWith('listen to ')
     )) {
-      const clean = trimmed.replace(/\s+on spotify/i, '').replace(/^spotify\s+(play|search)\s+/i, '').trim();
+      const clean = trimmed
+        .replace(/\s+on spotify/i, '')
+        .replace(/^(spotify\s+(play|search)|play song|play track|listen to)\s+/i, '')
+        .trim();
       return { plugin, cleanQuery: clean || trimmed };
     }
 
+    // 6. Natural Intent Matching: Wolfram Alpha (Math & Computation)
     if (plugin.id === 'wolfram' && (
       lower.includes('wolfram') ||
-      lower.startsWith('solve equation')
+      lower.startsWith('solve equation') ||
+      lower.startsWith('solve for ') ||
+      lower.startsWith('derivative of ') ||
+      lower.startsWith('integral of ') ||
+      /^(calculate|compute)\s+[\d\s+\-*/^()x=]+/i.test(trimmed)
     )) {
-      const clean = trimmed.replace(/with wolfram/i, '').replace(/on wolfram/i, '').trim();
+      const clean = trimmed.replace(/(with wolfram|on wolfram)/i, '').trim();
+      return { plugin, cleanQuery: clean || trimmed };
+    }
+
+    // 7. Natural Intent Matching: Python Code Sandbox
+    if (plugin.id === 'code-interpreter' && (
+      lower.startsWith('run python') ||
+      lower.startsWith('execute python') ||
+      lower.startsWith('run code') ||
+      lower.includes('python sandbox')
+    )) {
+      const clean = trimmed.replace(/^(run python|execute python|run code|python sandbox)\s*/i, '').trim();
+      return { plugin, cleanQuery: clean || trimmed };
+    }
+
+    // 8. Natural Intent Matching: Web Browser Search
+    if (plugin.id === 'web-browser' && (
+      lower.startsWith('search the web for') ||
+      lower.startsWith('search web for') ||
+      lower.startsWith('browse site') ||
+      lower.startsWith('browse website') ||
+      lower.startsWith('look up on web')
+    )) {
+      const clean = trimmed.replace(/^(search the web for|search web for|browse site|browse website|look up on web)\s*/i, '').trim();
+      return { plugin, cleanQuery: clean || trimmed };
+    }
+
+    // 9. Natural Intent Matching: YouTube Scout
+    if (plugin.id === 'youtube-scout' && (
+      lower.includes('on youtube') ||
+      lower.startsWith('search youtube') ||
+      lower.startsWith('youtube search')
+    )) {
+      const clean = trimmed.replace(/\s+on youtube/i, '').replace(/^(search youtube|youtube search)\s*/i, '').trim();
+      return { plugin, cleanQuery: clean || trimmed };
+    }
+
+    // 10. Natural Intent Matching: Amazon Deals
+    if (plugin.id === 'amazon-deals' && (
+      lower.includes('on amazon') ||
+      lower.startsWith('search amazon') ||
+      lower.startsWith('buy on amazon')
+    )) {
+      const clean = trimmed.replace(/\s+on amazon/i, '').replace(/^(search amazon|buy on amazon)\s*/i, '').trim();
       return { plugin, cleanQuery: clean || trimmed };
     }
   }
